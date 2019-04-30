@@ -9,7 +9,23 @@ body {
     height: 30px;
 }
 
+#drawing {
+    background-color: white;
+    border: 2px solid PaleGreen;
+    margin-left: 25px;
+    vertical-align: top;
+    width: 477px;
+    height: 477px;
+
+    display: inline-grid;
+    grid-template-columns: repeat(8, 57px);
+    grid-template-rows: repeat(8, 57px);
+    gap: 3px;
+}
+
 .palette {
+    display: inline-block;
     line-height: 0;
+    vertical-align: baseline;
     width: 120px;
 }

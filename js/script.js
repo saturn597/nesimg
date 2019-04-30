@@ -14,8 +14,39 @@ window.addEventListener('load', () => {
         palette,
     });
 
+    Vue.component('drawing-area', {
+        data: () => {
+            const pixels = [];
+            for (let i = 0; i < 64; i++) {
+                pixels.push({color: '#000000', id: i});
+            }
+            return { pixels };
+        },
+        methods: {
+            update: function(id) {
+                this.pixels[id].color = "#ffff00";
+            },
+        },
+        template: `
+            <div id="drawing">
+                <div class="pixel"
+                    v-for="pixel in pixels"
+                    v-bind:style="{ backgroundColor: pixel.color }"
+                    v-bind:key="pixel.id"
+                    v-on:click="update(pixel.id)">
+                </div>
+            </div>
+        `,
+    });
+
     const app = new Vue({
         el: "#app",
+        template: `
+            <div>
+                <color-palette></color-palette>
+                <drawing-area></drawing-area>
+            </div>
+        `,
     });
 });
 
