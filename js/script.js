@@ -24,17 +24,25 @@ window.addEventListener('load', () => {
         data: () => {
             const pixels = [];
             for (let i = 0; i < 64; i++) {
-                pixels.push({color: '#000000', id: i});
+                pixels.push({color: 'rgba(0,0,0,0)', id: i});
             }
-            return { pixels };
+            return { erase: false, pixels };
         },
         methods: {
+            mousedown: function(id) {
+                this.erase = this.pixels[id].color === this.currentColor;
+                this.update(id);
+            },
             update: function(id) {
-                this.pixels[id].color = this.currentColor;
+                const newColor = this.erase ?
+                    'rgba(0,0,0,0)' :
+                    this.currentColor;
+                this.pixels[id].color = newColor;
             },
         },
         props: {
             currentColor: String,
+            isDrawing: Boolean,
         },
         template: `
             <div id="drawing">
@@ -42,7 +50,8 @@ window.addEventListener('load', () => {
                     v-for="pixel in pixels"
                     v-bind:style="{ backgroundColor: pixel.color }"
                     v-bind:key="pixel.id"
-                    v-on:click="update(pixel.id)">
+                    v-on:mousedown.prevent="mousedown(pixel.id)"
+                    v-on:mouseover="isDrawing ? update(pixel.id) : false">
                 </div>
             </div>
         `,
@@ -51,6 +60,7 @@ window.addEventListener('load', () => {
     const app = new Vue({
         data: {
             currentColor: "#58F898",
+            mousebuttons: false,
         },
         el: "#app",
         methods: {
@@ -62,10 +72,19 @@ window.addEventListener('load', () => {
             <div id='app'>
                 <div id="colorIndicator" v-bind:style="{ backgroundColor: currentColor }"></div>
                 <color-palette v-bind:updateColor="updateColor"></color-palette>
-                <drawing-area v-bind:currentColor="currentColor"></drawing-area>
+                <drawing-area
+                    v-bind:currentColor="currentColor"
+                    v-bind:isDrawing="mousebuttons"></drawing-area>
             </div>
         `,
     });
+
+    document.body.onmousedown = function(e) {
+        app.mousebuttons = true;
+    };
+    document.body.onmouseup = function(e) {
+        app.mousebuttons = false;
+    };
 });
 
 
