@@ -1,11 +1,11 @@
 body {
     background-color: lightCyan;
-    font-family: 'Inconsolata', monospace; 
+    font-family: 'Inconsolata', monospace;
 }
 
 #app {
     display: grid;
-    grid-template-columns: 120px 486px;
+    grid-template-columns: 120px 486px 50px;
     grid-template-rows: 50px 430px;
     grid-row-gap: 10px;
     grid-column-gap: 20px;
@@ -15,7 +15,7 @@ body {
     display: flex;
 }
 
-#drawing {
+.pixelMatrix {
     background-color: white;
     border: 2px solid lightGreen;
     width: 100%;
@@ -27,6 +27,14 @@ body {
     grid-template-columns: repeat(8, 0.125fr);
     grid-template-rows: repeat(8, 0.125fr);
     gap: 4px;
+}
+
+.preview .pixelMatrix {
+    gap: 0;
+    grid-column: 3;
+    grid-row: 1;
+    height: 50px;
+    vertical-align: top;
 }
 
 .palette {

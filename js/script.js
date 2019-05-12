@@ -21,12 +21,8 @@ window.addEventListener('load', () => {
     });
 
     Vue.component('drawing-area', {
-        data: () => {
-            const pixels = [];
-            for (let i = 0; i < 64; i++) {
-                pixels.push({color: 'rgba(0,0,0,0)', id: i});
-            }
-            return { erase: false, pixels };
+        data: function() {
+            return { erase: false };
         },
         methods: {
             mousedown: function(id) {
@@ -37,36 +33,94 @@ window.addEventListener('load', () => {
                 const newColor = this.erase ?
                     'rgba(0,0,0,0)' :
                     this.currentColor;
-                this.pixels[id].color = newColor;
+                const newPixel = {color: newColor, id: id};
+                this.drawingUpdated(newPixel);
             },
         },
         props: {
             currentColor: String,
-            isDrawing: Boolean,
+            drawingUpdated: {
+                default: () => {},
+                type: Function,
+            },
+            isDrawing: {
+                default: false,
+                type: Boolean,
+            },
+            pixels: {
+                default: [],
+                type: Array,
+            },
         },
         template: `
             <div id="drawing">
+                <pixel-matrix
+                    v-bind:pixelMouseDown="mousedown"
+                    v-bind:pixelMouseOver="isDrawing ? update : () => {}"
+                    v-bind:pixels="pixels">
+                </pixel-matrix>
+            </div>
+        `,
+    });
+
+    Vue.component('drawing-preview', {
+        props: {
+            pixels: Array,
+        },
+        template: `
+            <div class="preview">
+                <pixel-matrix v-bind:pixels="pixels">
+                </pixel-matrix>
+            </div>
+        `,
+    });
+
+    Vue.component('pixel-matrix', {
+        props: {
+            pixelMouseDown: {
+                default: () => {},
+                type: Function,
+            },
+            pixelMouseOver: {
+                default: () => {},
+                type: Function,
+            },
+            pixels: Array,
+        },
+        template: `
+            <div class="pixelMatrix">
                 <div class="pixel"
                     v-for="pixel in pixels"
                     v-bind:style="{ backgroundColor: pixel.color }"
                     v-bind:key="pixel.id"
-                    v-on:mousedown.prevent="mousedown(pixel.id)"
-                    v-on:mouseover="isDrawing ? update(pixel.id) : false">
+                    v-on:mousedown.prevent="pixelMouseDown(pixel.id)"
+                    v-on:mouseover.prevent="pixelMouseOver(pixel.id)">
                 </div>
             </div>
         `,
     });
 
     const app = new Vue({
-        data: {
-            currentColor: "#58F898",
-            mousebuttons: false,
+        data: () => {
+            const pixels = [];
+            for (let i = 0; i < 64; i++) {
+                pixels.push({color: 'rgba(0,0,0,0)', id: i});
+            }
+
+            return {
+                currentColor: "#58F898",
+                mousebuttons: false,
+                pixels
+            };
         },
         el: "#app",
         methods: {
             updateColor: function(color) {
                 this.currentColor = color;
-            }
+            },
+            updatePixels: function(newPixel) {
+                Vue.set(this.pixels, newPixel.id, newPixel);
+            },
         },
         template: `
             <div id='app'>
@@ -74,7 +128,12 @@ window.addEventListener('load', () => {
                 <color-palette v-bind:updateColor="updateColor"></color-palette>
                 <drawing-area
                     v-bind:currentColor="currentColor"
-                    v-bind:isDrawing="mousebuttons"></drawing-area>
+                    v-bind:pixels="pixels"
+                    v-bind:isDrawing="mousebuttons"
+                    v-bind:drawingUpdated="updatePixels">
+                </drawing-area>
+                <drawing-preview v-bind:pixels="pixels">
+                </drawing-preview>
             </div>
         `,
     });
