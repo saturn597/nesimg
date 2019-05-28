@@ -1,18 +1,5 @@
 window.addEventListener('load', () => {
     Vue.component('drawing-area', {
-        computed: {
-            pixels: function() {
-                return this.drawing.map(pixel => {
-                    let string;
-                    if (pixel === null) {
-                        string = 'rgba(0,0,0,0)';
-                    } else {
-                        string = this.palette[pixel].string;
-                    }
-                    return { string };
-                });
-            },
-        },
         data: function() {
             return { erase: false };
         },
@@ -44,9 +31,10 @@ window.addEventListener('load', () => {
             <pixel-matrix class="drawing"
                 v-bind:rows="8"
                 v-bind:columns="8"
+                v-bind:palette="palette"
                 v-bind:pixelMouseDown="mousedown"
                 v-bind:pixelMouseOver="isDrawing ? update : () => {}"
-                v-bind:pixels="pixels">
+                v-bind:pixels="drawing">
             </pixel-matrix>
         `,
     });
@@ -94,9 +82,9 @@ window.addEventListener('load', () => {
         template: `
             <div class="pixelMatrix" v-bind:style="style">
                 <div class="pixel"
-                    v-for="(pixel, index) in pixels"
-                    v-bind:class="{ active: active.includes(pixel) }"
-                    v-bind:style="{ backgroundColor: pixel.string }"
+                    v-for="(color, index) in pixels"
+                    v-bind:class="{ active: active.includes(color) }"
+                    v-bind:style="{ backgroundColor: palette[color] }"
                     v-bind:key="index"
                     v-on:mousedown.prevent="pixelMouseDown(index)"
                     v-on:mouseover.prevent="pixelMouseOver(index)">
@@ -106,37 +94,36 @@ window.addEventListener('load', () => {
     });
 
     const app = new Vue({
+        computed: {
+            currentPalette: function() {
+                return this.selectedColors.map(c => this.allColors[c]);
+            },
+        },
         data: () => {
-            const pixels = [];
+            const digits = [];
             for (let i = 0; i < 64; i++) {
-                pixels.push({color: 'rgba(0,0,0,0)', id: i});
+                digits.push(i);
             }
 
-            const allColors = hexColors.map((hex, id) => {
-                return { string: hex, id };
-            });
-
+            const allColors = hexColors;
             const currentIndex = 0;
-            const currentPalette = allColors.slice(0, 16);
-
             const drawing = Array(64).fill(null);
+            const selectedColors = digits.slice(0, 16);
 
             return {
                 allColors,
-                currentColor: currentPalette[0],
+                currentIndex,
+                digits,
                 drawing,
                 mousebuttons: false,
-                currentIndex,
-                currentPalette,
-                pixels
+                selectedColors,
             };
         },
         el: "#app",
         methods: {
             updatePalette: function(index) {
-                const newColor = this.allColors[index];
-                if (!this.currentPalette.includes(newColor)) {
-                    Vue.set(this.currentPalette, this.currentIndex, newColor);
+                if (!this.selectedColors.includes(index)) {
+                    Vue.set(this.selectedColors, this.currentIndex, index);
                 }
             },
             updatePixel: function(id, newColor) {
@@ -148,13 +135,16 @@ window.addEventListener('load', () => {
         },
         template: `
             <div id='app'>
-                <div id="colorIndicator" v-bind:style="{ backgroundColor: currentColor.string}"></div>
+                <div id="colorIndicator"
+                    v-bind:style="{ backgroundColor: currentPalette[currentIndex] }">
+                </div>
                 <pixel-matrix class="allColors"
-                    v-bind:active="currentPalette"
+                    v-bind:active="selectedColors"
                     v-bind:columns="4"
                     v-bind:rows="16"
+                    v-bind:palette="allColors"
                     v-bind:pixelMouseDown="updatePalette"
-                    v-bind:pixels="allColors">
+                    v-bind:pixels="digits">
                 </pixel-matrix>
                 <drawing-area
                     v-bind:currentIndex="currentIndex"
@@ -168,11 +158,12 @@ window.addEventListener('load', () => {
                     v-bind:palette="currentPalette">
                 </drawing-area>
                 <pixel-matrix class="paletteDisplay"
-                    v-bind:active="[currentPalette[currentIndex]]"
+                    v-bind:active="[currentIndex]"
                     v-bind:columns="16"
                     v-bind:rows="1"
-                    v-bind:pixels="currentPalette"
-                    v-bind:pixelMouseDown="updateSelection">
+                    v-bind:palette="currentPalette"
+                    v-bind:pixelMouseDown="updateSelection"
+                    v-bind:pixels="digits.slice(0, 16)">
                 </pixel-matrix>
             </div>
         `,
