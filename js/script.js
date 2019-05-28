@@ -1,44 +1,33 @@
 window.addEventListener('load', () => {
-    Vue.component('color-palette', {
-        props: {
-            updateColor: Function,
-        },
-        template: `
-            <div class="palette">
-                <div class="colorOption"
-                    v-for="color in this.$options.palette"
-                    v-bind:style="{ backgroundColor: color.hex }"
-                    v-bind:key="color.id"
-                    v-bind:title="color.hex"
-                    v-on:click="updateColor(color.hex)">
-                </div>
-            </div>
-        `,
-
-        palette: hexColors.map((hex, id) => {
-            return { hex, id };
-        }),
-    });
-
     Vue.component('drawing-area', {
+        computed: {
+            pixels: function() {
+                return this.drawing.map(pixel => {
+                    let string;
+                    if (pixel === null) {
+                        string = 'rgba(0,0,0,0)';
+                    } else {
+                        string = this.palette[pixel].string;
+                    }
+                    return { string };
+                });
+            },
+        },
         data: function() {
             return { erase: false };
         },
         methods: {
             mousedown: function(id) {
-                this.erase = this.pixels[id].color === this.currentColor;
+                this.erase = this.drawing[id] === this.currentIndex;
                 this.update(id);
             },
             update: function(id) {
-                const newColor = this.erase ?
-                    'rgba(0,0,0,0)' :
-                    this.currentColor;
-                const newPixel = {color: newColor, id: id};
-                this.drawingUpdated(newPixel);
+                this.drawingUpdated(id, this.erase ? null : this.currentIndex);
             },
         },
         props: {
-            currentColor: String,
+            currentIndex: Number,
+            drawing: Array,
             drawingUpdated: {
                 default: () => {},
                 type: Function,
@@ -47,36 +36,51 @@ window.addEventListener('load', () => {
                 default: false,
                 type: Boolean,
             },
-            pixels: {
-                default: [],
+            palette: {
                 type: Array,
             },
         },
         template: `
-            <div id="drawing">
-                <pixel-matrix
-                    v-bind:pixelMouseDown="mousedown"
-                    v-bind:pixelMouseOver="isDrawing ? update : () => {}"
-                    v-bind:pixels="pixels">
-                </pixel-matrix>
-            </div>
-        `,
-    });
-
-    Vue.component('drawing-preview', {
-        props: {
-            pixels: Array,
-        },
-        template: `
-            <div class="preview">
-                <pixel-matrix v-bind:pixels="pixels">
-                </pixel-matrix>
-            </div>
+            <pixel-matrix class="drawing"
+                v-bind:rows="8"
+                v-bind:columns="8"
+                v-bind:pixelMouseDown="mousedown"
+                v-bind:pixelMouseOver="isDrawing ? update : () => {}"
+                v-bind:pixels="pixels">
+            </pixel-matrix>
         `,
     });
 
     Vue.component('pixel-matrix', {
+        data: function() {
+            const r = "repeat(" + this.rows + ", " + 1/this.rows + "fr)";
+            const c = "repeat(" + this.columns + ", " + 1/this.columns + "fr)";
+
+            const style = {
+                display: "inline-grid",
+                gridTemplateRows: r,
+                gridTemplateColumns: c,
+            };
+
+            return { style };
+        },
         props: {
+            active: {
+                default: () => [],
+                type: Array,
+            },
+            columns: {
+                default: 1,
+                type: Number,
+            },
+            rows: {
+                default: 1,
+                type: Number,
+            },
+            palette: {
+                default: null,
+                type: Array,
+            },
             pixelMouseDown: {
                 default: () => {},
                 type: Function,
@@ -88,13 +92,14 @@ window.addEventListener('load', () => {
             pixels: Array,
         },
         template: `
-            <div class="pixelMatrix">
+            <div class="pixelMatrix" v-bind:style="style">
                 <div class="pixel"
-                    v-for="pixel in pixels"
-                    v-bind:style="{ backgroundColor: pixel.color }"
-                    v-bind:key="pixel.id"
-                    v-on:mousedown.prevent="pixelMouseDown(pixel.id)"
-                    v-on:mouseover.prevent="pixelMouseOver(pixel.id)">
+                    v-for="(pixel, index) in pixels"
+                    v-bind:class="{ active: active.includes(pixel) }"
+                    v-bind:style="{ backgroundColor: pixel.string }"
+                    v-bind:key="index"
+                    v-on:mousedown.prevent="pixelMouseDown(index)"
+                    v-on:mouseover.prevent="pixelMouseOver(index)">
                 </div>
             </div>
         `,
@@ -107,33 +112,68 @@ window.addEventListener('load', () => {
                 pixels.push({color: 'rgba(0,0,0,0)', id: i});
             }
 
+            const allColors = hexColors.map((hex, id) => {
+                return { string: hex, id };
+            });
+
+            const currentIndex = 0;
+            const currentPalette = allColors.slice(0, 16);
+
+            const drawing = Array(64).fill(null);
+
             return {
-                currentColor: "#58F898",
+                allColors,
+                currentColor: currentPalette[0],
+                drawing,
                 mousebuttons: false,
+                currentIndex,
+                currentPalette,
                 pixels
             };
         },
         el: "#app",
         methods: {
-            updateColor: function(color) {
-                this.currentColor = color;
+            updatePalette: function(index) {
+                const newColor = this.allColors[index];
+                if (!this.currentPalette.includes(newColor)) {
+                    Vue.set(this.currentPalette, this.currentIndex, newColor);
+                }
             },
-            updatePixels: function(newPixel) {
-                Vue.set(this.pixels, newPixel.id, newPixel);
+            updatePixel: function(id, newColor) {
+                Vue.set(this.drawing, id, newColor);
+            },
+            updateSelection: function(index) {
+                this.currentIndex = index;
             },
         },
         template: `
             <div id='app'>
-                <div id="colorIndicator" v-bind:style="{ backgroundColor: currentColor }"></div>
-                <color-palette v-bind:updateColor="updateColor"></color-palette>
+                <div id="colorIndicator" v-bind:style="{ backgroundColor: currentColor.string}"></div>
+                <pixel-matrix class="allColors"
+                    v-bind:active="currentPalette"
+                    v-bind:columns="4"
+                    v-bind:rows="16"
+                    v-bind:pixelMouseDown="updatePalette"
+                    v-bind:pixels="allColors">
+                </pixel-matrix>
                 <drawing-area
-                    v-bind:currentColor="currentColor"
-                    v-bind:pixels="pixels"
+                    v-bind:currentIndex="currentIndex"
+                    v-bind:drawing="drawing"
                     v-bind:isDrawing="mousebuttons"
-                    v-bind:drawingUpdated="updatePixels">
+                    v-bind:drawingUpdated="updatePixel"
+                    v-bind:palette="currentPalette">
                 </drawing-area>
-                <drawing-preview v-bind:pixels="pixels">
-                </drawing-preview>
+                <drawing-area class="preview"
+                    v-bind:drawing="drawing"
+                    v-bind:palette="currentPalette">
+                </drawing-area>
+                <pixel-matrix class="paletteDisplay"
+                    v-bind:active="[currentPalette[currentIndex]]"
+                    v-bind:columns="16"
+                    v-bind:rows="1"
+                    v-bind:pixels="currentPalette"
+                    v-bind:pixelMouseDown="updateSelection">
+                </pixel-matrix>
             </div>
         `,
     });
