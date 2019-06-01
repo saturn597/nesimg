@@ -199,8 +199,8 @@ window.addEventListener('load', () => {
                 </drawing-area>
                 <pixel-matrix class="paletteDisplay"
                     v-bind:active="[currentIndex]"
-                    v-bind:columns="currentPalette.length"
-                    v-bind:rows="1"
+                    v-bind:columns="1"
+                    v-bind:rows="currentPalette.length"
                     v-bind:palette="currentPalette"
                     v-bind:pixelMouseDown="updateSelection"
                     v-bind:pixels="digits.slice(0, currentPalette.length)">
