@@ -108,7 +108,7 @@ window.addEventListener('load', () => {
             const allColors = hexColors;
             const currentIndex = 0;
             const drawing = Array(64).fill(null);
-            const selectedColors = digits.slice(0, 16);
+            const selectedColors = digits.slice(0, 4);
 
             return {
                 allColors,
@@ -159,11 +159,11 @@ window.addEventListener('load', () => {
                 </drawing-area>
                 <pixel-matrix class="paletteDisplay"
                     v-bind:active="[currentIndex]"
-                    v-bind:columns="16"
+                    v-bind:columns="currentPalette.length"
                     v-bind:rows="1"
                     v-bind:palette="currentPalette"
                     v-bind:pixelMouseDown="updateSelection"
-                    v-bind:pixels="digits.slice(0, 16)">
+                    v-bind:pixels="digits.slice(0, currentPalette.length)">
                 </pixel-matrix>
             </div>
         `,
