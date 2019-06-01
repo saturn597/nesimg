@@ -5,10 +5,16 @@ body {
 
 #app {
     display: grid;
-    grid-template-columns: 120px 486px 50px;
+    grid-template-columns: 120px 486px 50px 200px;
     grid-template-rows: 50px 430px 50px;
     grid-row-gap: 10px;
     grid-column-gap: 20px;
+}
+
+#dataOutput {
+    background-color: lightPink;
+    grid-column: 4;
+    grid-row: 1 / 4;
 }
 
 .pixelMatrix {

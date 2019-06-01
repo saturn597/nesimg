@@ -42,6 +42,43 @@ window.addEventListener('load', () => {
         `,
     });
 
+    Vue.component('data-output', {
+        computed: {
+            raw: function() {
+                const result = Array(16).fill(0);
+                let count = 0;
+                for (let pixel of this.drawing) {
+                    const row = Math.floor(count / 8);
+                    const column = 7 - count % 8;
+                    if (pixel === 1 || pixel === 3) {
+                        result[row] += 2 ** column;
+                    }
+                    if (pixel === 2 || pixel === 3) {
+                        result[row + 8] += 2 ** column;
+                    }
+                    count++;
+                }
+                return result;
+            },
+            base64: function() {
+                return window.btoa(String.fromCharCode(...this.raw));
+            },
+        },
+        props: {
+            drawing: {
+                default: [],
+                type: Array,
+            },
+        },
+        template: `
+            <div id="dataOutput">
+                {{ this.raw.map(b => b.toString(16)) }}
+                <a v-bind:href="'data:;base64,'+this.base64" download="img.chr">Download</a>
+            </div>
+
+        `,
+    });
+
     Vue.component('pixel-matrix', {
         data: function() {
             const r = "repeat(" + this.rows + ", " + 1/this.rows + "fr)";
@@ -168,6 +205,8 @@ window.addEventListener('load', () => {
                     v-bind:pixelMouseDown="updateSelection"
                     v-bind:pixels="digits.slice(0, currentPalette.length)">
                 </pixel-matrix>
+                <data-output v-bind:drawing="drawing">
+                </data-output>
             </div>
         `,
     });
