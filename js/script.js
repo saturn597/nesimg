@@ -5,7 +5,10 @@ window.addEventListener('load', () => {
         },
         methods: {
             mousedown: function(id) {
-                this.erase = this.drawing[id] === this.currentIndex;
+                // Uncomment below line to allow "erasing", which creates blank
+                // pixels. Blank pixels aren't really an intrinsic part of the
+                // NES binary image format, so disallowing for now.
+                // this.erase = this.drawing[id] === this.currentIndex;
                 this.update(id);
             },
             update: function(id) {
@@ -107,8 +110,8 @@ window.addEventListener('load', () => {
 
             const allColors = hexColors;
             const currentIndex = 0;
-            const drawing = Array(64).fill(null);
             const selectedColors = digits.slice(0, 4);
+            const drawing = Array(64).fill(selectedColors[currentIndex]);
 
             return {
                 allColors,
