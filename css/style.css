@@ -7,7 +7,7 @@ body {
 #app {
     display: grid;
     grid-template-columns: 120px 75px 486px 50px 200px;
-    grid-template-rows: 50px 430px 100px;
+    grid-template-rows: 50px 430px 200px;
     grid-row-gap: 10px;
     grid-column-gap: 20px;
 }
@@ -16,23 +16,17 @@ body {
     background-color: lightPink;
     grid-column: 1 / 4;
     grid-row: 3;
+    overflow: scroll;
 }
 
 .pixelMatrix {
     background-color: white;
-    border: 2px solid lightGreen;
     width: 100%;
 }
 
 .pixelMatrix.drawing {
     gap: 4px;
     height: 486px;
-}
-
-.pixelMatrix.preview {
-    gap: 0;
-    height: 50px;
-    vertical-align: top;
 }
 
 .allColors {
@@ -49,6 +43,15 @@ body {
 
 .active {
     border: 4px solid red;
+}
+
+#overview .active {
+    margin: 0 -4px;
+}
+
+#overview .pixelMatrix{
+    height: 50px;
+    vertical-align: top;
 }
 
 #colorIndicator {
