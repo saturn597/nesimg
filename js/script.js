@@ -86,7 +86,7 @@ window.addEventListener('load', () => {
                 // Since each pixel takes up 2 bits, our output will be one
                 // byte for every 4 pixels, so our array needs to have the
                 // length below. Initialize with all zeroes.
-                raw: Array(this.pixels.length / 4).fill(0),
+                raw: Array(this.pixels.length * 16).fill(0),
             };
         },
         watch: {
@@ -106,7 +106,7 @@ window.addEventListener('load', () => {
                 for (let i = 0; i < 64; i++) {
                     // Proceed through the pixels and depending on the color
                     // set the appropriate bits in our array.
-                    const color = pixels[this.currentSprite * 64 + i];
+                    const color = pixels[this.currentSprite][i];
                     const row = Math.floor(i / 8);
                     const column = 7 - i % 8;
 
@@ -139,11 +139,12 @@ window.addEventListener('load', () => {
         `,
     });
 
-    Vue.component('overview-display', {
-        computed: {
-            numSprites: function() {
-                return Math.floor(this.pixels.length / 64);
-            },
+    Vue.component('overview', {
+        created: function() {
+            this.updateSprites = [];
+            for (let i = 0; i < Math.floor(this.pixels.length); i++) {
+                this.updateSprites.push(this.updateSprite.bind(this, i));
+            }
         },
         props: {
             currentSprite: Number,
@@ -156,14 +157,16 @@ window.addEventListener('load', () => {
         },
         template: `
             <div id="overview">
-                <drawing-area
-                    v-for="n in numSprites"
+                <pixel-matrix
+                    v-for="n in pixels.length"
                     v-bind:class="{ active: n - 1 === currentSprite }"
-                    v-bind:drawing="pixels.slice((n-1) * 64, n * 64)"
+                    v-bind:columns="8"
+                    v-bind:rows="8"
                     v-bind:key="n"
                     v-bind:palette="palette"
-                    v-on:click="updateSprite(n-1)">
-                </drawing-area>
+                    v-bind:pixels="pixels[n - 1]"
+                    v-bind:onClick="updateSprites[n - 1]">
+                </pixel-matrix>
             </div>
         `,
     });
@@ -194,6 +197,10 @@ window.addEventListener('load', () => {
                 default: 1,
                 type: Number,
             },
+            onClick: {
+                default: () => {},
+                type: Function,
+            },
             palette: {
                 default: null,
                 type: Array,
@@ -209,7 +216,7 @@ window.addEventListener('load', () => {
             pixels: Array,
         },
         template: `
-            <div class="pixelMatrix" v-bind:style="style" v-on="$listeners">
+            <div class="pixelMatrix" v-bind:style="style" v-on:click="onClick">
                 <div class="pixel"
                     v-for="(color, index) in pixels"
                     v-bind:class="{ active: active.includes(color) }"
@@ -227,10 +234,6 @@ window.addEventListener('load', () => {
             currentPalette: function() {
                 return this.selectedColors.map(c => this.allColors[c]);
             },
-            currentSpriteData: function() {
-                const start = this.currentSprite * 64;
-                return this.pixels.slice(start, start+64);
-            },
         },
         data: () => {
             const numSprites = 10;
@@ -242,8 +245,8 @@ window.addEventListener('load', () => {
             const allColors = hexColors;
             const currentIndex = 0;
             const selectedColors = digits.slice(0, 4);
-            const pixels = Array(64 * numSprites).fill(
-                selectedColors[currentIndex]);
+            const pixels = Array(numSprites).fill(Array(64).fill(
+                selectedColors[currentIndex]));
 
             return {
                 allColors,
@@ -267,7 +270,9 @@ window.addEventListener('load', () => {
                 }
             },
             updatePixel: function(id, newColor) {
-                Vue.set(this.pixels, id + 64 * this.currentSprite, newColor);
+                const newSprite = this.pixels[this.currentSprite].slice();
+                newSprite[id] = newColor;
+                Vue.set(this.pixels, this.currentSprite, newSprite);
             },
             updateSelection: function(index) {
                 this.currentIndex = index;
@@ -288,7 +293,7 @@ window.addEventListener('load', () => {
                 </pixel-matrix>
                 <drawing-area class="drawing"
                     v-bind:currentIndex="currentIndex"
-                    v-bind:drawing="currentSpriteData"
+                    v-bind:drawing="this.pixels[this.currentSprite]"
                     v-bind:isDrawing="mousebuttons"
                     v-bind:drawingUpdated="updatePixel"
                     v-bind:palette="currentPalette">
@@ -301,12 +306,12 @@ window.addEventListener('load', () => {
                     v-bind:pixelMouseDown="updateSelection"
                     v-bind:pixels="digits.slice(0, currentPalette.length)">
                 </pixel-matrix>
-                <overview-display
+                <overview
                     v-bind:currentSprite="currentSprite"
                     v-bind:pixels="pixels"
                     v-bind:palette="currentPalette"
                     v-bind:updateSprite="updateSprite">
-                </overview-display>
+                </overview>
                 <data-output v-bind:pixels="pixels" v-bind:currentSprite="currentSprite">
                 </data-output>
             </div>
