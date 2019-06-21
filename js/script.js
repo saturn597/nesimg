@@ -135,7 +135,6 @@ window.addEventListener('load', () => {
                 <a v-bind:href="'data:;base64,'+this.base64" download="img.chr">Download</a>
                 {{ this.raw.map(b => b.toString(16)) }}
             </div>
-
         `,
     });
 
@@ -145,6 +144,14 @@ window.addEventListener('load', () => {
             for (let i = 0; i < Math.floor(this.pixels.length); i++) {
                 this.updateSprites.push(this.updateSprite.bind(this, i));
             }
+
+            // Try to make the overview a square-ish grid
+            const n = Math.ceil(Math.sqrt(this.pixels.length));
+            this.style = {
+                display: 'grid',
+                gridTemplateRows: `repeat(${n}, ${ 1 / n }fr)`,
+                gridTemplateColumns: `repeat(${n}, ${ 1 / n }fr)`,
+            };
         },
         props: {
             currentSprite: Number,
@@ -156,7 +163,7 @@ window.addEventListener('load', () => {
             updateSprite: Function,
         },
         template: `
-            <div id="overview">
+            <div id="overview" v-bind:style="style">
                 <pixel-matrix
                     v-for="n in pixels.length"
                     v-bind:class="{ active: n - 1 === currentSprite }"
@@ -236,7 +243,7 @@ window.addEventListener('load', () => {
             },
         },
         data: () => {
-            const numSprites = 10;
+            const numSprites = 64;
             const digits = [];
             for (let i = 0; i < 64; i++) {
                 digits.push(i);
