@@ -138,6 +138,62 @@ window.addEventListener('load', () => {
         `,
     });
 
+    Vue.component('file-processor', {
+        methods: {
+            processSprite(data) {
+                // Take raw data for sprite in CHR format, represented as an
+                // array of integers 0-255, each of which corresponds to one
+                // byte of the raw data.  Output series of integers 0-3, each
+                // representing the color of a given pixel. (As selected from
+                // palette of 4 colors)
+                const result = [];
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 7; col >= 0; col--) {
+                        const bit1 = 1 & (data[row] >>> col);
+                        const bit2 = 1 & (data[row + 8] >>> col);
+                        result.push(bit1 + bit2 * 2);
+                    }
+                }
+                return result;
+            },
+            handleFile: function(file) {
+                const reader = new FileReader();
+                reader.onload = loadEvent => this.parseArrayBuffer(loadEvent.target.result);
+                reader.readAsArrayBuffer(file);
+            },
+            parseArrayBuffer(buffer) {
+                // Take array buffer and output array of sprites.
+                const maxSprites = Math.min(this.maxSprites,
+                    buffer.byteLength / 16);
+                const sprites = [];
+                for (let sprite = 0; sprite < maxSprites; sprite++) {
+                    const pixels = [];
+                    const spriteData = new Uint8Array(
+                        buffer.slice(16 * sprite, 16 * (sprite + 1)));
+                    sprites.push(this.processSprite(spriteData));
+                }
+                this.onParse(sprites);
+            }
+        },
+        props: {
+            maxSprites: {
+                default: 2,
+                type: Number,
+            },
+            onParse: {
+                // When we've parsed a file, this prop is called with the
+                // resulting array of sprites.
+                default: () => {},
+                type: Function,
+            },
+        },
+        template: `
+            <div id="fileProcessor">
+                <input type="file" id="chrUpload" v-on:change= "e => handleFile(e.target.files[0])">
+            </div>
+        `,
+    });
+
     Vue.component('overview', {
         created: function() {
             this.updateSprites = [];
@@ -268,6 +324,9 @@ window.addEventListener('load', () => {
         },
         el: "#app",
         methods: {
+            updateAllSprites: function(spriteArray) {
+                this.pixels = spriteArray.slice();
+            },
             updateSprite: function(n) {
                 this.currentSprite = n;
             },
@@ -321,6 +380,10 @@ window.addEventListener('load', () => {
                 </overview>
                 <data-output v-bind:pixels="pixels" v-bind:currentSprite="currentSprite">
                 </data-output>
+                <file-processor
+                    v-bind:maxSprites="numSprites"
+                    v-bind:onParse="updateAllSprites">
+                </file-processor>
             </div>
         `,
     });

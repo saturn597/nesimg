@@ -19,6 +19,13 @@ body {
     overflow: scroll;
 }
 
+#fileProcessor {
+    background-color: peachPuff;
+    display: flex;
+    grid-row: 3;
+    grid-column: 4;
+}
+
 .pixelMatrix {
     background-color: white;
     width: 100%;
