@@ -46,98 +46,6 @@ window.addEventListener('load', () => {
         `,
     });
 
-    Vue.component('data-output', {
-        // Component to output image data in the NES' CHR format. Explanation
-        // of CHR format in words:
-        //
-        // A given 8x8 pixel sprite takes up 16 bytes.
-        //
-        // Each row of 8 pixels occupies two of those bytes. Weirdly,
-        // the two bytes for a row aren't consecutive but are offset by
-        // 8 bytes. So the first row takes byte 0 and byte 8, and row 2
-        // takes byte 1 and byte 9, and the last row in the sprite
-        // takes up byte 7 and byte 15.
-        //
-        // Within a row, the color of each individual pixel is
-        // described by one bit from the first byte and one bit from
-        // the second byte. So, the first pixel is described by the
-        // combination of bit 0 of byte 0 and bit 0 of byte 8. The
-        // second pixel is described by bit 1 of byte 0 and bit 1 of
-        // byte 8, and so on.  Then the next row of pixels down is
-        // described by byte 1 and byte 9 in an analogous fashion. And
-        // the final row is described by bits 0-7 of byte 7 and byte
-        // 15.
-        //
-        // Once we fill up 16 bytes this way, we have a full sprite.
-        // The next sprite occupies the next 16 bytes and so on.
-        //
-        // Because we only have 2 bits of data for each pixel, each
-        // pixel in a sprite can only be one of 4 different colors.
-        // Which colors those are is determined by separate palette
-        // information.
-
-        computed: {
-            base64: function() {
-                return window.btoa(String.fromCharCode(...this.raw));
-            },
-        },
-        data: function() {
-            return {
-                // Since each pixel takes up 2 bits, our output will be one
-                // byte for every 4 pixels, so our array needs to have the
-                // length below. Initialize with all zeroes.
-                raw: Array(this.pixels.length * 16).fill(0),
-            };
-        },
-        watch: {
-            pixels: function(pixels) {
-                // Update this.raw when the pixels change. We want this.raw to
-                // be an array representing the bytes of the image, in NES CHR
-                // format. Each element of the array is a Number representing
-                // one byte.
-                //
-                // Making this.raw a computed property leads to poor
-                // performance when pixels.length is large. Instead, we're
-                // watching the "pixels" prop and then selectively updating
-                // only the part of this.raw that represents the current
-                // sprite.
-
-                const result = Array(16).fill(0);
-                for (let i = 0; i < 64; i++) {
-                    // Proceed through the pixels and depending on the color
-                    // set the appropriate bits in our array.
-                    const color = pixels[this.currentSprite][i];
-                    const row = Math.floor(i / 8);
-                    const column = 7 - i % 8;
-
-                    if (color === 1 || color === 3) {
-                        result[row] += 2 ** column;
-                    }
-                    if (color === 2 || color === 3) {
-                        result[row + 8] += 2 ** column;
-                    }
-                }
-
-                // Finalize the update by splicing result into raw.
-                this.raw.splice(this.currentSprite * 16, 16, ...result);
-            },
-
-        },
-        props: {
-            currentSprite: Number,
-            pixels: {
-                default: [],
-                type: Array,
-            },
-        },
-        template: `
-            <div id="dataOutput">
-                <a v-bind:href="'data:;base64,'+this.base64" download="img.chr">Download</a>
-                {{ this.raw.map(b => b.toString(16)) }}
-            </div>
-        `,
-    });
-
     Vue.component('file-processor', {
         methods: {
             processSprite(data) {
@@ -163,10 +71,9 @@ window.addEventListener('load', () => {
             },
             parseArrayBuffer(buffer) {
                 // Take array buffer and output array of sprites.
-                const maxSprites = Math.min(this.maxSprites,
-                    buffer.byteLength / 16);
+                const numSprites = buffer.byteLength / 16;
                 const sprites = [];
-                for (let sprite = 0; sprite < maxSprites; sprite++) {
+                for (let sprite = 0; sprite < numSprites; sprite++) {
                     const pixels = [];
                     const spriteData = new Uint8Array(
                         buffer.slice(16 * sprite, 16 * (sprite + 1)));
@@ -257,6 +164,7 @@ window.addEventListener('load', () => {
                 type: Number,
             },
             rows: {
+
                 default: 1,
                 type: Number,
             },
@@ -324,6 +232,71 @@ window.addEventListener('load', () => {
         },
         el: "#app",
         methods: {
+            downloadChr: function() {
+                // Generate a base64 data URL representing the bytes of the CHR
+                // data the user is editing. Set it as the href of a link and
+                // then save the link locally.
+                const dl = document.createElement('a');
+                const bytes = [].concat(...this.pixels.map(this.getBytes));
+                const base64 = window.btoa(String.fromCharCode(...bytes));
+                dl.href = "data:;base64," + base64;
+                dl.download = "img.chr";
+                document.body.append(dl);
+                dl.click();
+            },
+            getBytes: function(pixels) {
+                // Takes array representing the pixels in a single 8x8 sprite.
+                // Ouputs array representing the bytes of the image in NES CHR
+                // format. Each element of the array is a number representing
+                // one byte.
+                //
+                // Explanation of CHR format in words:
+                //
+                // A given 8x8 pixel sprite takes up 16 bytes.
+                //
+                // Each row of 8 pixels occupies two of those bytes.  The two
+                // bytes for a row are offset by 8 bytes. So the first row
+                // takes byte 0 and byte 8, and row 2 takes byte 1 and byte 9,
+                // and the last row in the sprite takes up byte 7 and byte 15.
+                //
+                // Within a row, the color of each individual pixel is
+                // described by one bit from the first byte and one bit from
+                // the second (offset-by-8-bytes) byte. So, the first pixel is
+                // described by the combination of bit 0 of byte 0 and bit 0 of
+                // byte 8. The second pixel is described by bit 1 of byte 0 and
+                // bit 1 of byte 8, and so on. Then the same for the next row,
+                // but it's byte 1 and byte 9, and the last row is byte 7 and
+                // byte 15.
+                //
+                // Once we fill up 16 bytes this way, we have a full sprite.
+                // The next sprite occupies the next 16 bytes and so on.
+                //
+                // Because we only have 2 bits of data for each pixel, each
+                // pixel in a sprite can only be one of 4 different colors.
+                // Which colors a given bit-pattern represents is determined by
+                // separate palette information.
+                //
+                //
+                // TODO: special class to deal with CHR data might be useful
+
+                const result = Array(16).fill(0);
+                for (let i = 0; i < 64; i++) {
+                    // Proceed through the pixels and depending on the color
+                    // set the appropriate bits in our array.
+                    const color = pixels[i];
+                    const row = Math.floor(i / 8);
+                    const column = 7 - i % 8;
+
+                    if (color === 1 || color === 3) {
+                        result[row] += 2 ** column;
+                    }
+                    if (color === 2 || color === 3) {
+                        result[row + 8] += 2 ** column;
+                    }
+                }
+
+                return result;
+            },
             updateAllSprites: function(spriteArray) {
                 this.pixels = spriteArray.slice();
             },
@@ -378,8 +351,9 @@ window.addEventListener('load', () => {
                     v-bind:palette="currentPalette"
                     v-bind:updateSprite="updateSprite">
                 </overview>
-                <data-output v-bind:pixels="pixels" v-bind:currentSprite="currentSprite">
-                </data-output>
+                <div id="dataOutput">
+                    <button v-on:click="downloadChr">Download</button>
+                </div>
                 <file-processor
                     v-bind:maxSprites="numSprites"
                     v-bind:onParse="updateAllSprites">
