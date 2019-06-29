@@ -222,8 +222,10 @@ window.addEventListener('load', () => {
             return {
                 allColors,
                 currentIndex,
+                currentPage: 0,
                 currentSprite: 0,
                 digits,
+                pageSize: 64,
                 pixels,
                 mousebuttons: false,
                 numSprites,
@@ -347,7 +349,7 @@ window.addEventListener('load', () => {
                 </pixel-matrix>
                 <overview
                     v-bind:currentSprite="currentSprite"
-                    v-bind:pixels="pixels"
+                    v-bind:pixels="pixels.slice(currentPage * pageSize, pageSize)"
                     v-bind:palette="currentPalette"
                     v-bind:updateSprite="updateSprite">
                 </overview>
