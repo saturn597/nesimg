@@ -47,13 +47,19 @@ window.addEventListener('load', () => {
     });
 
     Vue.component('file-processor', {
+        data: function() {
+            return {
+                chrStart: 0,
+                isInes: false,
+            };
+        },
         methods: {
             processSprite(data) {
-                // Take raw data for sprite in CHR format, represented as an
-                // array of integers 0-255, each of which corresponds to one
-                // byte of the raw data.  Output series of integers 0-3, each
-                // representing the color of a given pixel. (As selected from
-                // palette of 4 colors)
+                // Take raw data for a single sprite in CHR format, represented
+                // as an array of integers 0-255, each of which corresponds to
+                // one byte of the raw data.  Output series of integers 0-3,
+                // each representing the color of a given pixel. (As selected
+                // from palette of 4 colors).
                 const result = [];
                 for (let row = 0; row < 8; row++) {
                     for (let col = 7; col >= 0; col--) {
@@ -70,6 +76,15 @@ window.addEventListener('load', () => {
                 reader.readAsArrayBuffer(file);
             },
             parseArrayBuffer(buffer) {
+                // check if we're dealing with ines file
+                const header = new Uint8Array(buffer.slice(0, 16));
+                const magic = [0x4e, 0x45, 0x53, 0x1a];  // Ascii NES + 1a
+                this.isInes = magic.every((b, i) => b === header[i]);
+
+                const trainerPresent = (header[6] & 4) / 4;
+                const prgSize = 16384 * header[4];
+                this.chrStart = 16 + prgSize + trainerPresent * 512;
+
                 // Take array buffer and output array of sprites.
                 const numSprites = buffer.byteLength / 16;
                 const sprites = [];
@@ -97,6 +112,8 @@ window.addEventListener('load', () => {
         template: `
             <div id="fileProcessor">
                 <input type="file" id="chrUpload" v-on:change= "e => handleFile(e.target.files[0])">
+                {{ isInes }}
+                {{ chrStart }}
             </div>
         `,
     });
@@ -303,7 +320,7 @@ window.addEventListener('load', () => {
                 this.pixels = spriteArray.slice();
             },
             updateSprite: function(n) {
-                this.currentSprite = n;
+                this.currentSprite = n + this.currentPage * this.pageSize;
             },
             updatePalette: function(index) {
                 if (!this.selectedColors.includes(index)) {
@@ -349,7 +366,7 @@ window.addEventListener('load', () => {
                 </pixel-matrix>
                 <overview
                     v-bind:currentSprite="currentSprite"
-                    v-bind:pixels="pixels.slice(currentPage * pageSize, pageSize)"
+                    v-bind:pixels="pixels.slice(currentPage * pageSize, (currentPage + 1) * pageSize)"
                     v-bind:palette="currentPalette"
                     v-bind:updateSprite="updateSprite">
                 </overview>
