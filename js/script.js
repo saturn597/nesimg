@@ -46,15 +46,49 @@ window.addEventListener('load', () => {
         `,
     });
 
+    Vue.component('navigation', {
+        methods: {
+            nextPage: function() {
+                this.updatePage(this.currentPage + 1);
+            },
+            prevPage: function() {
+                this.updatePage(this.currentPage - 1);
+            },
+        },
+        props: {
+            currentPage: {
+                type: Number,
+            },
+            maxPage: {
+                type: Number,
+            },
+            updatePage: {
+                type: Function,
+            },
+        },
+        template: `
+            <div id="navigation">
+                <button v-on:click="prevPage" v-bind:disabled="currentPage <= 0">
+                    prev
+                </button>
+                <button v-on:click="nextPage" v-bind:disabled="currentPage >= maxPage">
+                    next
+                </button>
+                <div>Page {{ currentPage + 1 }} of {{ maxPage + 1 }}</div>
+            </div>
+        `,
+    });
+
     Vue.component('file-processor', {
         data: function() {
             return {
+                chrSize: 0,
                 chrStart: 0,
                 isInes: false,
             };
         },
         methods: {
-            processSprite(data) {
+            processSprite: function(data) {
                 // Take raw data for a single sprite in CHR format, represented
                 // as an array of integers 0-255, each of which corresponds to
                 // one byte of the raw data.  Output series of integers 0-3,
@@ -81,9 +115,15 @@ window.addEventListener('load', () => {
                 const magic = [0x4e, 0x45, 0x53, 0x1a];  // Ascii NES + 1a
                 this.isInes = magic.every((b, i) => b === header[i]);
 
-                const trainerPresent = (header[6] & 4) / 4;
-                const prgSize = 16384 * header[4];
-                this.chrStart = 16 + prgSize + trainerPresent * 512;
+                if (this.isInes) {
+                    const trainerPresent = (header[6] & 4) / 4;
+                    const prgSize = 16384 * header[4];
+                    this.chrSize = header[5];
+                    if (this.chrSize > 0) {
+                        this.chrStart = 16 + prgSize + trainerPresent * 512;
+                        this.chrFound(this.chrStart, this.chrSize);
+                    }
+                }
 
                 // Take array buffer and output array of sprites.
                 const numSprites = buffer.byteLength / 16;
@@ -98,9 +138,9 @@ window.addEventListener('load', () => {
             }
         },
         props: {
-            maxSprites: {
-                default: 2,
-                type: Number,
+            chrFound: {
+                default: () => {},
+                type: Function,
             },
             onParse: {
                 // When we've parsed a file, this prop is called with the
@@ -111,9 +151,15 @@ window.addEventListener('load', () => {
         },
         template: `
             <div id="fileProcessor">
-                <input type="file" id="chrUpload" v-on:change= "e => handleFile(e.target.files[0])">
-                {{ isInes }}
-                {{ chrStart }}
+                <input
+                    type="file"
+                    id="chrUpload"
+                    v-on:change= "e => handleFile(e.target.files[0])">
+                <div>
+                    <div v-if="isInes">
+                        Opened an iNES file.
+                    </div>
+                </div>
             </div>
         `,
     });
@@ -224,7 +270,7 @@ window.addEventListener('load', () => {
             },
         },
         data: () => {
-            const numSprites = 64;
+            const numSprites = 128;
             const digits = [];
             for (let i = 0; i < 64; i++) {
                 digits.push(i);
@@ -245,12 +291,15 @@ window.addEventListener('load', () => {
                 pageSize: 64,
                 pixels,
                 mousebuttons: false,
-                numSprites,
                 selectedColors,
             };
         },
         el: "#app",
         methods: {
+            chrFound: function(bytes) {
+                const newPage = Math.floor(bytes / (this.pageSize * 16))
+                this.updatePage(newPage);
+            },
             downloadChr: function() {
                 // Generate a base64 data URL representing the bytes of the CHR
                 // data the user is editing. Set it as the href of a link and
@@ -262,6 +311,7 @@ window.addEventListener('load', () => {
                 dl.download = "img.chr";
                 document.body.append(dl);
                 dl.click();
+                document.body.removeChild(dl);
             },
             getBytes: function(pixels) {
                 // Takes array representing the pixels in a single 8x8 sprite.
@@ -327,6 +377,11 @@ window.addEventListener('load', () => {
                     Vue.set(this.selectedColors, this.currentIndex, index);
                 }
             },
+            updatePage: function(newPage) {
+                this.currentSprite = this.currentSprite +
+                    this.pageSize * (newPage - this.currentPage);
+                this.currentPage = newPage;
+            },
             updatePixel: function(id, newColor) {
                 const newSprite = this.pixels[this.currentSprite].slice();
                 newSprite[id] = newColor;
@@ -365,7 +420,7 @@ window.addEventListener('load', () => {
                     v-bind:pixels="digits.slice(0, currentPalette.length)">
                 </pixel-matrix>
                 <overview
-                    v-bind:currentSprite="currentSprite"
+                    v-bind:currentSprite="currentSprite - currentPage * pageSize"
                     v-bind:pixels="pixels.slice(currentPage * pageSize, (currentPage + 1) * pageSize)"
                     v-bind:palette="currentPalette"
                     v-bind:updateSprite="updateSprite">
@@ -373,10 +428,17 @@ window.addEventListener('load', () => {
                 <div id="dataOutput">
                     <button v-on:click="downloadChr">Download</button>
                 </div>
-                <file-processor
-                    v-bind:maxSprites="numSprites"
-                    v-bind:onParse="updateAllSprites">
-                </file-processor>
+                <div id="controls">
+                    <navigation
+                        v-bind:currentPage="currentPage"
+                        v-bind:maxPage="Math.floor(pixels.length / pageSize) - 1"
+                        v-bind:updatePage="updatePage">
+                    </navigation>
+                    <file-processor
+                        v-bind:chrFound="chrFound"
+                        v-bind:onParse="updateAllSprites">
+                    </file-processor>
+                </div>
             </div>
         `,
     });

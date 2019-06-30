@@ -12,6 +12,14 @@ body {
     grid-column-gap: 20px;
 }
 
+#controls {
+    background-color: peachPuff;
+    display: block;
+    grid-row: 3;
+    grid-column: 4;
+    text-align: center;
+}
+
 #dataOutput {
     background-color: lightPink;
     grid-column: 1 / 4;
@@ -20,10 +28,8 @@ body {
 }
 
 #fileProcessor {
-    background-color: peachPuff;
-    display: flex;
-    grid-row: 3;
-    grid-column: 4;
+    display: block;
+    margin-top: 25px;
 }
 
 .pixelMatrix {
