@@ -268,6 +268,9 @@ window.addEventListener('load', () => {
             currentPalette: function() {
                 return this.selectedColors.map(c => this.allColors[c]);
             },
+            maxPage: function() {
+                return Math.ceil(this.pixels.length / this.pageSize) - 1;
+            },
         },
         data: () => {
             const numSprites = 128;
@@ -366,8 +369,13 @@ window.addEventListener('load', () => {
 
                 return result;
             },
-            updateAllSprites: function(spriteArray) {
+            onFileParse: function(spriteArray) {
                 this.pixels = spriteArray.slice();
+
+                // in case we're past the last page in the file
+                if (this.currentPage > this.maxPage) {
+                    this.updatePage(this.maxPage);
+                }
             },
             updateSprite: function(n) {
                 this.currentSprite = n + this.currentPage * this.pageSize;
@@ -431,12 +439,12 @@ window.addEventListener('load', () => {
                 <div id="controls">
                     <navigation
                         v-bind:currentPage="currentPage"
-                        v-bind:maxPage="Math.floor(pixels.length / pageSize) - 1"
+                        v-bind:maxPage="maxPage"
                         v-bind:updatePage="updatePage">
                     </navigation>
                     <file-processor
                         v-bind:chrFound="chrFound"
-                        v-bind:onParse="updateAllSprites">
+                        v-bind:onParse="onFileParse">
                     </file-processor>
                 </div>
             </div>
