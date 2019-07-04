@@ -265,11 +265,20 @@ window.addEventListener('load', () => {
 
     const app = new Vue({
         computed: {
+            currentPagePixels: function() {
+                const start = this.currentPage * this.pageSize;
+                const end = start + this.pageSize;
+                return this.pixels.slice(start, end);
+            },
             currentPalette: function() {
                 return this.selectedColors.map(c => this.allColors[c]);
             },
             maxPage: function() {
                 return Math.ceil(this.pixels.length / this.pageSize) - 1;
+            },
+            pageRelativeSprite: function() {
+                // The offset of the current sprite from the current page start
+                return this.currentSprite - this.currentPage * this.pageSize;
             },
         },
         data: () => {
@@ -428,8 +437,8 @@ window.addEventListener('load', () => {
                     v-bind:pixels="digits.slice(0, currentPalette.length)">
                 </pixel-matrix>
                 <overview
-                    v-bind:currentSprite="currentSprite - currentPage * pageSize"
-                    v-bind:pixels="pixels.slice(currentPage * pageSize, (currentPage + 1) * pageSize)"
+                    v-bind:currentSprite="pageRelativeSprite"
+                    v-bind:pixels="currentPagePixels"
                     v-bind:palette="currentPalette"
                     v-bind:updateSprite="updateSprite">
                 </overview>
