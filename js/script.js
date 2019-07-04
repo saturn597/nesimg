@@ -35,12 +35,12 @@ window.addEventListener('load', () => {
         },
         template: `
             <pixel-matrix
-                v-bind:rows="8"
-                v-bind:columns="8"
-                v-bind:palette="palette"
-                v-bind:pixelMouseDown="mousedown"
-                v-bind:pixelMouseOver="isDrawing ? update : () => {}"
-                v-bind:pixels="drawing"
+                :rows="8"
+                :columns="8"
+                :palette="palette"
+                :pixelMouseDown="mousedown"
+                :pixelMouseOver="isDrawing ? update : () => {}"
+                :pixels="drawing"
                 v-on="$listeners">
             </pixel-matrix>
         `,
@@ -68,10 +68,10 @@ window.addEventListener('load', () => {
         },
         template: `
             <div id="navigation">
-                <button v-on:click="prevPage" v-bind:disabled="currentPage <= 0">
+                <button @click="prevPage" :disabled="currentPage <= 0">
                     prev
                 </button>
-                <button v-on:click="nextPage" v-bind:disabled="currentPage >= maxPage">
+                <button @click="nextPage" :disabled="currentPage >= maxPage">
                     next
                 </button>
                 <div>Page {{ currentPage + 1 }} of {{ maxPage + 1 }}</div>
@@ -154,7 +154,7 @@ window.addEventListener('load', () => {
                 <input
                     type="file"
                     id="chrUpload"
-                    v-on:change= "e => handleFile(e.target.files[0])">
+                    @change= "e => handleFile(e.target.files[0])">
                 <div>
                     <div v-if="isInes">
                         Opened an iNES file.
@@ -189,16 +189,16 @@ window.addEventListener('load', () => {
             updateSprite: Function,
         },
         template: `
-            <div id="overview" v-bind:style="style">
+            <div id="overview" :style="style">
                 <pixel-matrix
                     v-for="n in pixels.length"
-                    v-bind:class="{ active: n - 1 === currentSprite }"
-                    v-bind:columns="8"
-                    v-bind:rows="8"
-                    v-bind:key="n"
-                    v-bind:palette="palette"
-                    v-bind:pixels="pixels[n - 1]"
-                    v-bind:onClick="updateSprites[n - 1]">
+                    :class="{ active: n - 1 === currentSprite }"
+                    :columns="8"
+                    :rows="8"
+                    :key="n"
+                    :palette="palette"
+                    :pixels="pixels[n - 1]"
+                    :onClick="updateSprites[n - 1]">
                 </pixel-matrix>
             </div>
         `,
@@ -250,14 +250,14 @@ window.addEventListener('load', () => {
             pixels: Array,
         },
         template: `
-            <div class="pixelMatrix" v-bind:style="style" v-on:click="onClick">
+            <div class="pixelMatrix" :style="style" @click="onClick">
                 <div class="pixel"
                     v-for="(color, index) in pixels"
-                    v-bind:class="{ active: active.includes(color) }"
-                    v-bind:style="{ backgroundColor: palette[color] }"
-                    v-bind:key="index"
-                    v-on:mousedown.prevent="pixelMouseDown(index)"
-                    v-on:mouseover.prevent="pixelMouseOver(index)">
+                    :class="{ active: active.includes(color) }"
+                    :style="{ backgroundColor: palette[color] }"
+                    :key="index"
+                    @mousedown.prevent="pixelMouseDown(index)"
+                    @mouseover.prevent="pixelMouseOver(index)">
                 </div>
             </div>
         `,
@@ -411,49 +411,49 @@ window.addEventListener('load', () => {
         template: `
             <div id='app'>
                 <div id="colorIndicator"
-                    v-bind:style="{ backgroundColor: currentPalette[currentIndex] }">
+                    :style="{ backgroundColor: currentPalette[currentIndex] }">
                 </div>
                 <pixel-matrix class="allColors"
-                    v-bind:active="selectedColors"
-                    v-bind:columns="4"
-                    v-bind:rows="16"
-                    v-bind:palette="allColors"
-                    v-bind:pixelMouseDown="updatePalette"
-                    v-bind:pixels="digits">
+                    :active="selectedColors"
+                    :columns="4"
+                    :rows="16"
+                    :palette="allColors"
+                    :pixelMouseDown="updatePalette"
+                    :pixels="digits">
                 </pixel-matrix>
                 <drawing-area class="drawing"
-                    v-bind:currentIndex="currentIndex"
-                    v-bind:drawing="this.pixels[this.currentSprite]"
-                    v-bind:isDrawing="mousebuttons"
-                    v-bind:drawingUpdated="updatePixel"
-                    v-bind:palette="currentPalette">
+                    :currentIndex="currentIndex"
+                    :drawing="this.pixels[this.currentSprite]"
+                    :isDrawing="mousebuttons"
+                    :drawingUpdated="updatePixel"
+                    :palette="currentPalette">
                 </drawing-area>
                 <pixel-matrix class="paletteDisplay"
-                    v-bind:active="[currentIndex]"
-                    v-bind:columns="1"
-                    v-bind:rows="currentPalette.length"
-                    v-bind:palette="currentPalette"
-                    v-bind:pixelMouseDown="updateSelection"
-                    v-bind:pixels="digits.slice(0, currentPalette.length)">
+                    :active="[currentIndex]"
+                    :columns="1"
+                    :rows="currentPalette.length"
+                    :palette="currentPalette"
+                    :pixelMouseDown="updateSelection"
+                    :pixels="digits.slice(0, currentPalette.length)">
                 </pixel-matrix>
                 <overview
-                    v-bind:currentSprite="pageRelativeSprite"
-                    v-bind:pixels="currentPagePixels"
-                    v-bind:palette="currentPalette"
-                    v-bind:updateSprite="updateSprite">
+                    :currentSprite="pageRelativeSprite"
+                    :pixels="currentPagePixels"
+                    :palette="currentPalette"
+                    :updateSprite="updateSprite">
                 </overview>
                 <div id="dataOutput">
-                    <button v-on:click="downloadChr">Download</button>
+                    <button @click="downloadChr">Download</button>
                 </div>
                 <div id="controls">
                     <navigation
-                        v-bind:currentPage="currentPage"
-                        v-bind:maxPage="maxPage"
-                        v-bind:updatePage="updatePage">
+                        :currentPage="currentPage"
+                        :maxPage="maxPage"
+                        :updatePage="updatePage">
                     </navigation>
                     <file-processor
-                        v-bind:chrFound="chrFound"
-                        v-bind:onParse="onFileParse">
+                        :chrFound="chrFound"
+                        :onParse="onFileParse">
                     </file-processor>
                 </div>
             </div>
