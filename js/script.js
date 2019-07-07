@@ -84,6 +84,7 @@ window.addEventListener('load', () => {
             return {
                 chrSize: 0,
                 chrStart: 0,
+                filename: '',
                 isInes: false,
             };
         },
@@ -142,6 +143,9 @@ window.addEventListener('load', () => {
                 default: () => {},
                 type: Function,
             },
+            download: {
+                type: Function,
+            },
             onParse: {
                 // When we've parsed a file, this prop is called with the
                 // resulting array of sprites.
@@ -151,15 +155,18 @@ window.addEventListener('load', () => {
         },
         template: `
             <div id="fileProcessor">
-                <input
-                    type="file"
-                    id="chrUpload"
-                    @change= "e => handleFile(e.target.files[0])">
-                <div>
-                    <div v-if="isInes">
-                        Opened an iNES file.
-                    </div>
-                </div>
+                <button @click="download(filename)" id="downloadButton">Save...</button>
+                <label>Filename:<input v-model="filename" placeholder="img.chr"></label>
+                <hr>
+                <label id="open">Open...
+                    <input
+                        type="file"
+                        id="chrUpload"
+                        @change= "e => handleFile(e.target.files[0])">
+                </label>
+                <span v-if="isInes">
+                    Opened an iNES file.
+                </span>
             </div>
         `,
     });
@@ -290,7 +297,7 @@ window.addEventListener('load', () => {
 
             const allColors = hexColors;
             const currentIndex = 0;
-            const selectedColors = digits.slice(0, 4);
+            const selectedColors = [0, 5, 55, 13];
             const pixels = Array(numSprites).fill(Array(64).fill(
                 selectedColors[currentIndex]));
 
@@ -312,15 +319,15 @@ window.addEventListener('load', () => {
                 const newPage = Math.floor(bytes / (this.pageSize * 16))
                 this.updatePage(newPage);
             },
-            downloadChr: function() {
+            downloadChr: function(filename) {
                 // Generate a base64 data URL representing the bytes of the CHR
                 // data the user is editing. Set it as the href of a link and
                 // then save the link locally.
                 const dl = document.createElement('a');
                 const bytes = [].concat(...this.pixels.map(this.getBytes));
                 const base64 = window.btoa(String.fromCharCode(...bytes));
-                dl.href = "data:;base64," + base64;
-                dl.download = "img.chr";
+                dl.href = 'data:;base64,' + base64;
+                dl.download = filename || 'img.chr';
                 document.body.append(dl);
                 dl.click();
                 document.body.removeChild(dl);
@@ -442,19 +449,17 @@ window.addEventListener('load', () => {
                     :palette="currentPalette"
                     :updateSprite="updateSprite">
                 </overview>
-                <div id="dataOutput">
-                    <button @click="downloadChr">Download</button>
-                </div>
+                <file-processor
+                    :chrFound="chrFound"
+                    :download="downloadChr"
+                    :onParse="onFileParse">
+                </file-processor>
                 <div id="controls">
                     <navigation
                         :currentPage="currentPage"
                         :maxPage="maxPage"
                         :updatePage="updatePage">
                     </navigation>
-                    <file-processor
-                        :chrFound="chrFound"
-                        :onParse="onFileParse">
-                    </file-processor>
                 </div>
             </div>
         `,

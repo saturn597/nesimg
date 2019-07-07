@@ -1,15 +1,37 @@
 body {
     background-color: lightCyan;
     font-family: 'Inconsolata', monospace;
-    font-size: 25px;
+    font-size: 20px;
 }
 
 #app {
     display: grid;
     grid-template-columns: 120px 75px 486px 480px;
-    grid-template-rows: 50px 430px 200px;
+    grid-template-rows: 50px 430px 150px;
     grid-row-gap: 10px;
     grid-column-gap: 20px;
+}
+
+button, #open {
+    background-color: deepPink;
+    border: 1px outset white;
+    border-radius: 15px;
+    color: white;
+    font-family: 'Inconsolata', monospace;
+    font-size: 20px;
+    padding: 15px;
+}
+
+button:hover, #open:hover {
+    background-color: #ff0483;
+}
+
+button:active, #open:active {
+    border-style: inset;
+}
+
+button:disabled {
+    background-color: grey;
 }
 
 #controls {
@@ -20,16 +42,14 @@ body {
     text-align: center;
 }
 
-#dataOutput {
-    background-color: lightPink;
-    grid-column: 1 / 4;
+#fileProcessor {
+    grid-column: 3 / 4;
     grid-row: 3;
-    overflow: scroll;
+    text-align: left;
 }
 
-#fileProcessor {
-    display: block;
-    margin-top: 25px;
+label {
+    display: inline-block;
 }
 
 .pixelMatrix {
@@ -70,12 +90,20 @@ body {
 }
 
 #overview .active {
-    border-width: 1px;
-    margin: -1px -1px;
+    border-width: 2px;
+    margin: -2px -2px;
 }
 
 
 #colorIndicator {
     width: 100%;
     height: 100%;
+}
+
+/* Make default "browse" button invisible */
+[type="file"] {
+    opacity: 0;
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
 }
