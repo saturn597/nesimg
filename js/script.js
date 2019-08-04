@@ -271,6 +271,11 @@ Vue.component('overview', {
 
 
 Vue.component('pixel-matrix', {
+    computed: {
+        finalPixels: function() {
+            return this.pixels || this.palette.map((p, i) => i);
+        },
+    },
     data: function() {
         const r = "repeat(" + this.rows + ", " + 1/this.rows + "fr)";
         const c = "repeat(" + this.columns + ", " + 1/this.columns + "fr)";
@@ -297,6 +302,7 @@ Vue.component('pixel-matrix', {
             default: 1,
             type: Number,
         },
+
         onClick: {
             default: () => {},
             type: Function,
@@ -318,7 +324,7 @@ Vue.component('pixel-matrix', {
     template: `
         <div class="pixelMatrix" :style="style" @click="onClick">
             <div class="pixel"
-                v-for="(color, index) in pixels"
+                v-for="(color, index) in finalPixels"
                 :class="{ active: active.includes(color) }"
                 :style="{ backgroundColor: palette[color] }"
                 :key="index"
@@ -349,11 +355,6 @@ Vue.component('app', {
         },
     },
     data: () => {
-        const digits = [];
-        for (let i = 0; i < 64; i++) {
-            digits.push(i);
-        }
-
         const allColors = hexColors;
         const currentIndex = 0;
         const numSprites = 128;
@@ -366,7 +367,6 @@ Vue.component('app', {
             currentIndex,
             currentPage: 0,
             currentSprite: 0,
-            digits,
             pageSize: 64,
             selectedColors,
             sprites,
@@ -434,7 +434,7 @@ Vue.component('app', {
                 :rows="16"
                 :palette="allColors"
                 :pixelMouseDown="updatePalette"
-                :pixels="digits">
+            >
             </pixel-matrix>
             <drawing-area class="drawing"
                 :currentIndex="currentIndex"
@@ -449,7 +449,7 @@ Vue.component('app', {
                 :rows="currentPalette.length"
                 :palette="currentPalette"
                 :pixelMouseDown="updateSelection"
-                :pixels="digits.slice(0, currentPalette.length)">
+            >
             </pixel-matrix>
             <overview
                 :currentSprite="pageRelativeSprite"
