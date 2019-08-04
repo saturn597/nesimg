@@ -1,0 +1,25 @@
+{
+  "name": "nesimg",
+  "version": "1.0.0",
+  "description": "A pixel image editor that can output images in the CHR format used by the NES.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saturn597/nesimg.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/saturn597/nesimg/issues"
+  },
+  "homepage": "https://github.com/saturn597/nesimg#readme",
+  "devDependencies": {
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6"
+  }
+}
