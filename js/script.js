@@ -138,7 +138,7 @@ Vue.component('app', {
             </overview-area>
             <file-processor
                 :chrFound="chrFound"
-                :download="downloadChr"
+                :saveAs="downloadChr"
                 :onParse="onFileParse">
             </file-processor>
             <div id="controls">

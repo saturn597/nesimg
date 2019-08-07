@@ -3,8 +3,9 @@ export default {
         return {
             chrSize: 0,
             chrStart: 0,
-            filename: '',
+            filenameToSave: '',
             isInes: false,
+            filenameOpened: '',
         };
     },
     methods: {
@@ -28,6 +29,7 @@ export default {
             const reader = new FileReader();
             reader.onload = loadEvent => this.parseArrayBuffer(loadEvent.target.result);
             reader.readAsArrayBuffer(file);
+            this.filenameOpened = file.name;
         },
         parseArrayBuffer(buffer) {
             // check if we're dealing with ines file
@@ -62,7 +64,9 @@ export default {
             default: () => {},
             type: Function,
         },
-        download: {
+        saveAs: {
+            // Function to call when our save button is pushed.
+            // Will be passed the filename to save as.
             type: Function,
         },
         onParse: {
@@ -74,8 +78,8 @@ export default {
     },
     template: `
         <div id="fileProcessor">
-            <button @click="download(filename)" id="downloadButton">Save...</button>
-            <label>Filename:<input v-model="filename" placeholder="img.chr"></label>
+            <button @click="saveAs(filenameToSave)" id="downloadButton">Save...</button>
+            <label>Filename:<input v-model="filenameToSave" placeholder="img.chr"></label>
             <hr>
             <label id="open">Open...
                 <input
@@ -83,9 +87,7 @@ export default {
                     id="chrUpload"
                     @change= "e => handleFile(e.target.files[0])">
             </label>
-            <span v-if="isInes">
-                Opened an iNES file.
-            </span>
+            {{ filenameOpened }}<strong v-if="isInes"> (iNES) </strong>
         </div>
     `,
 };
