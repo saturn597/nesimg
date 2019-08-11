@@ -1,6 +1,6 @@
 import DrawingArea from './components/drawing-area';
 import FileProcessor from './components/file-processor';
-import NavigationArea from './components/navigation-area';
+import PageControls from './components/page-controls';
 import OverviewArea from './components/overview-area';
 import PixelMatrix from './components/pixel-matrix';
 
@@ -11,7 +11,7 @@ Vue.component('app', {
     components: {
         DrawingArea,
         FileProcessor,
-        NavigationArea,
+        PageControls,
         OverviewArea,
         PixelMatrix,
     },
@@ -141,11 +141,12 @@ Vue.component('app', {
                 :saveAs="downloadChr"
                 :onParse="onFileParse">
             </file-processor>
-            <navigation-area
+            <page-controls
                 :currentPage="currentPage"
                 :maxPage="maxPage"
-                :updatePage="updatePage">
-            </navigation-area>
+                :updatePage="updatePage"
+            >
+            </page-controls>
         </div>
     `,
 
