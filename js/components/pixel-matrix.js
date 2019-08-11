@@ -56,7 +56,8 @@ export default {
                 :style="{ backgroundColor: palette[color] }"
                 :key="index"
                 @mousedown.prevent="pixelMouseDown(index)"
-                @mouseover.prevent="pixelMouseOver(index)">
+                @mouseover.prevent="pixelMouseOver(index)"
+            >
             </div>
         </div>
     `,

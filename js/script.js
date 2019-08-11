@@ -105,7 +105,8 @@ Vue.component('app', {
     template: `
         <div id='app'>
             <div id="colorIndicator"
-                :style="{ backgroundColor: currentPalette[currentIndex] }">
+                :style="{ backgroundColor: currentPalette[currentIndex] }"
+            >
             </div>
             <pixel-matrix class="allColors"
                 :active="selectedColors"
@@ -120,7 +121,8 @@ Vue.component('app', {
                 :drawing="sprites[this.currentSprite]"
                 :isDrawing="isDrawing"
                 :drawingUpdated="updatePixel"
-                :palette="currentPalette">
+                :palette="currentPalette"
+            >
             </drawing-area>
             <pixel-matrix class="paletteDisplay"
                 :active="[currentIndex]"
@@ -134,12 +136,14 @@ Vue.component('app', {
                 :currentSprite="pageRelativeSprite"
                 :pixels="currentPagePixels"
                 :palette="currentPalette"
-                :updateSprite="updateSprite">
+                :updateSprite="updateSprite"
+            >
             </overview-area>
             <file-processor
                 :chrFound="chrFound"
                 :saveAs="downloadChr"
-                :onParse="onFileParse">
+                :onParse="onFileParse"
+            >
             </file-processor>
             <page-controls
                 :currentPage="currentPage"
@@ -172,4 +176,3 @@ document.body.onmousedown = function(e) {
 document.body.onmouseup = function(e) {
     app.mousebuttons = false;
 };
-

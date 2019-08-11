@@ -37,7 +37,8 @@ export default {
                 :key="n"
                 :palette="palette"
                 :pixels="pixels[n - 1]"
-                :onClick="updateSprites[n - 1]">
+                :onClick="updateSprites[n - 1]"
+            >
             </pixel-matrix>
         </div>
     `,

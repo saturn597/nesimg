@@ -85,7 +85,8 @@ export default {
                 <input
                     type="file"
                     id="chrUpload"
-                    @change= "e => handleFile(e.target.files[0])">
+                    @change= "e => handleFile(e.target.files[0])"
+                >
             </label>
             {{ filenameOpened }}<strong v-if="isInes"> (iNES) </strong>
         </div>

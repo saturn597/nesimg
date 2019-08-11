@@ -45,7 +45,8 @@ export default {
             :pixelMouseDown="mousedown"
             :pixelMouseOver="isDrawing ? update : () => {}"
             :pixels="drawing"
-            v-on="$listeners">
+            v-on="$listeners"
+        >
         </pixel-matrix>
     `,
 };
