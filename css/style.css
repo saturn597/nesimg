@@ -26,7 +26,7 @@ button:hover, #open:hover {
     background-color: #ff0483;
 }
 
-button:active, #open:active {
+button:enabled:active, #open:active {
     border-style: inset;
 }
 
