@@ -16,7 +16,7 @@ Vue.component('app', {
         PixelMatrix,
     },
     computed: {
-        currentPagePixels: function() {
+        currentPageSprites: function() {
             const start = this.currentPage * this.pageSize;
             const end = start + this.pageSize;
             return this.sprites.slice(start, end);
@@ -26,10 +26,6 @@ Vue.component('app', {
         },
         maxPage: function() {
             return Math.ceil(this.sprites.length / this.pageSize) - 1;
-        },
-        pageRelativeSprite: function() {
-            // The offset of the current sprite from the current page start
-            return this.currentSprite - this.currentPage * this.pageSize;
         },
     },
     data: () => {
@@ -44,7 +40,7 @@ Vue.component('app', {
             allColors,
             currentIndex,
             currentPage: 0,
-            currentSprite: 0,
+            pageRelativeSprite: 0,
             pageSize: 64,
             selectedColors,
             sprites,
@@ -78,7 +74,7 @@ Vue.component('app', {
             }
         },
         updateSprite: function(n) {
-            this.currentSprite = n + this.currentPage * this.pageSize;
+            this.pageRelativeSprite = n;
         },
         updatePalette: function(index) {
             if (!this.selectedColors.includes(index)) {
@@ -86,14 +82,13 @@ Vue.component('app', {
             }
         },
         updatePage: function(newPage) {
-            this.currentSprite = this.currentSprite +
-                this.pageSize * (newPage - this.currentPage);
             this.currentPage = newPage;
         },
         updatePixel: function(id, newColor) {
-            const newSprite = this.sprites[this.currentSprite].slice();
+            const spritePosition = this.pageSize * this.currentPage + this.pageRelativeSprite;
+            const newSprite = this.sprites[spritePosition].slice();
             newSprite[id] = newColor;
-            Vue.set(this.sprites, this.currentSprite, newSprite);
+            Vue.set(this.sprites, spritePosition, newSprite);
         },
         updateSelection: function(index) {
             this.currentIndex = index;
@@ -118,7 +113,7 @@ Vue.component('app', {
             </pixel-matrix>
             <drawing-area class="drawing"
                 :currentIndex="currentIndex"
-                :drawing="sprites[this.currentSprite]"
+                :drawing="currentPageSprites[pageRelativeSprite]"
                 :isDrawing="isDrawing"
                 :drawingUpdated="updatePixel"
                 :palette="currentPalette"
@@ -134,7 +129,7 @@ Vue.component('app', {
             </pixel-matrix>
             <overview-area
                 :currentSprite="pageRelativeSprite"
-                :pixels="currentPagePixels"
+                :pixels="currentPageSprites"
                 :palette="currentPalette"
                 :updateSprite="updateSprite"
             >
