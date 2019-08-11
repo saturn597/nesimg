@@ -19,7 +19,7 @@ export default {
         },
     },
     template: `
-        <div id="navigation">
+        <div id="pageControls">
             <button @click="prevPage" :disabled="currentPage <= 0">
                 prev
             </button>

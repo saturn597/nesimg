@@ -141,13 +141,11 @@ Vue.component('app', {
                 :saveAs="downloadChr"
                 :onParse="onFileParse">
             </file-processor>
-            <div id="controls">
-                <navigation-area
-                    :currentPage="currentPage"
-                    :maxPage="maxPage"
-                    :updatePage="updatePage">
-                </navigation-area>
-            </div>
+            <navigation-area
+                :currentPage="currentPage"
+                :maxPage="maxPage"
+                :updatePage="updatePage">
+            </navigation-area>
         </div>
     `,
 
